@@ -83,12 +83,12 @@ function parse_libsvm(stream::IO, filter)
     return block
 end
 
-function parse_libsvm(path, filter = nothing)
+function parse_libsvm(path, filter=nothing)
     f = open(path, "r")
-    if filter != nothing
-        block = parse_libsvm(f, filter)
-    else
+    if filter == nothing
         block = parse_libsvm(f)
+    else
+        block = parse_libsvm(f, filter)
     end
     close(f)
     return block
@@ -96,7 +96,7 @@ end
 
 function save_libsvm(stream::IO, block::RowBlock)
     for i in 1:length(block)
-        print(stream, block.label[i], ' ')
+        print(stream, labels(block)[i], ' ')
         row = block[i]
         for j in 1:length(row)
             idx, val = row[j]
