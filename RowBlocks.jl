@@ -50,28 +50,46 @@ for t in [:RowBlock, :Row]
     @eval done(x::$t, state) = state == length(x) + 1
 end
 
+function parse_libsvm_line(block::RowBlock, line)
+    space_ix = findfirst(line, ' ')
+    y = parse(Int, line[1:space_ix-1])
+    push!(block.label, y)
+    for token in split(strip(line[space_ix+1:end]), ' ')
+        colon_ix = findfirst(token, ':')
+        ix = parse(Int, token[1:colon_ix-1])
+        val = parse(Float64, token[colon_ix+1:end])
+        push!(block.index, ix)
+        push!(block.value, val)
+        block.dim = max(block.dim, ix)
+    end
+    push!(block.offset, length(block.value)+1)
+end
+
 function parse_libsvm(stream::IO)
     block = RowBlock(Int, Int, Float64)
     for line in eachline(stream)
-        space_ix = findfirst(line, ' ')
-        y = parse(Int, line[1:space_ix-1])
-        push!(block.label, y)
-        for token in split(strip(line[space_ix+1:end]), ' ')
-            colon_ix = findfirst(token, ':')
-            ix = parse(Int, token[1:colon_ix-1])
-            val = parse(Float64, token[colon_ix+1:end])
-            push!(block.index, ix)
-            push!(block.value, val)
-            block.dim = max(block.dim, ix)
-        end
-        push!(block.offset, length(block.value)+1)
+        parse_libsvm_line(block, line)
     end
     return block
 end
 
-function parse_libsvm(path)
+function parse_libsvm(stream::IO, filter)
+    block = RowBlock(Int, Int, Float64)
+    for (i, line) in enumerate(eachline(stream))
+        if filter(i, line)
+            parse_libsvm_line(block, line)
+        end
+    end
+    return block
+end
+
+function parse_libsvm(path, filter = nothing)
     f = open(path, "r")
-    block = parse_libsvm(f)
+    if filter != nothing
+        block = parse_libsvm(f, filter)
+    else
+        block = parse_libsvm(f)
+    end
     close(f)
     return block
 end
