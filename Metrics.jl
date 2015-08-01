@@ -21,8 +21,8 @@ function precompute_metric(xs::Array{Float64, 2})
     n = size(xs, 2)
     d = Array(Float64, n, n)
     for i in 1:n, j in 1:i
-        distance = dot(xs[:,i], xs[:,i]) + dot(xs[:,j], xs[:,j]) -
-                   2*dot(xs[:,i], xs[:,j])
+        distance = sqrt(dot(xs[:,i], xs[:,i]) + dot(xs[:,j], xs[:,j]) -
+                   2*dot(xs[:,i], xs[:,j]))
         d[i,j] = distance
         d[j,i] = distance
     end
@@ -33,7 +33,7 @@ function precompute_metric(xs)
     n = length(xs)
     d = Array(Float64, n, n)
     for i in 1:n, j in 1:i
-        distance = dot(xs[i],xs[i]) + dot(xs[j],xs[j]) - 2*dot(xs[i],xs[j])
+        distance = sqrt(dot(xs[i],xs[i]) + dot(xs[j],xs[j]) - 2*dot(xs[i],xs[j]))
         d[i,j] = distance
         d[j,i] = distance
     end
