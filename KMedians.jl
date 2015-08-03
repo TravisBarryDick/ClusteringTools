@@ -11,7 +11,7 @@ import Base.size
 
 using JuMP, Gurobi
 
-function solve_kmedian_lp(metric, k, p, ℓ, L; solve_ip=false, verbose=false)
+function solve_kmedian_lp(metric, k, p, ℓ, L; solve_ip=false, verbose=false, soft_capacities=false)
     N = size(metric)
     @assert ℓ*k <= p*N "Lower capacity can't be satisfied."
     @assert L*k >= p*N "Upper capacity can't be satisfied."
@@ -21,10 +21,18 @@ function solve_kmedian_lp(metric, k, p, ℓ, L; solve_ip=false, verbose=false)
     # Defining the variables
     if solve_ip
         @defVar(model, x[1:N, 1:N], Bin)
-        @defVar(model, y[1:N], Bin)
+        if soft_capacities
+            @defVar(model, y[1:N] >= 0, Int)
+        else
+            @defVar(model, y[1:N], Bin)
+        end
     else
         @defVar(model, 0 <= x[1:N, 1:N] <= 1) # assignment variables
-        @defVar(model, 0 <= y[1:N] <= 1) # opening variables
+        if soft_capacities
+            @defVar(model, y[1:N] >= 0)
+        else
+            @defVar(model, 0 <= y[1:N] <= 1) # opening variables
+        end
     end
     # Replication constraints
     for j in 1:N
@@ -75,6 +83,11 @@ function SparseLPSolution(x, y)
        end
    end
    return sol
+end
+
+function make_as_cs(sol::SparseLPSolution)
+    n = length(sol.assignments)
+
 end
 
 function objective_value(m::FiniteMetric, s::SparseLPSolution)
@@ -248,21 +261,21 @@ end
 # Wrapper Functions #
 #####################
 
-function exact_kmedian(data, k, p, ℓ, L; verbose=false)
+function exact_kmedian(data, k, p, ℓ, L; verbose=false, soft_capacities = false)
     metric = precompute_metric(data)
-    return exact_kmedian(metric, k, p, ℓ, L; verbose=verbose)
+    return exact_kmedian(metric, k, p, ℓ, L; verbose=verbose, soft_capacities=soft_capacities)
 end
 
-function exact_kmedian(data, k; verbose=false)
-    exact_kmedian(data, k, 1, 0, size(data,2); verbose=false)
+function exact_kmedian(data, k; verbose=false, soft_capacities = false)
+    exact_kmedian(data, k, 1, 0, size(data,2); verbose=false, soft_capacities=soft_capacities)
 end
 
-function exact_kmedian(metric::FiniteMetric, k, p, ℓ, L; verbose=false)
-    solve_kmedian_lp(metric, k, p, ℓ, L, solve_ip=true, verbose=verbose)
+function exact_kmedian(metric::FiniteMetric, k, p, ℓ, L; verbose=false, soft_capacities=false)
+    solve_kmedian_lp(metric, k, p, ℓ, L, solve_ip=true, verbose=verbose, soft_capacities=soft_capacities)
 end
 
-function exact_kmedian(metric::FiniteMetric, k; verbose=false)
-    exact_kmedian(metric, k, 1, 0, size(metric); verbose=verbose)
+function exact_kmedian(metric::FiniteMetric, k; verbose=false, soft_capacities=false)
+    exact_kmedian(metric, k, 1, 0, size(metric); verbose=verbose, soft_capacities=soft_capacities)
 end
 
 function kmedian_rounded_y(metric::FiniteMetric, k, p, ℓ, L; verbose = false)
