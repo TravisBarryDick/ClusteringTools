@@ -20,17 +20,20 @@ function solve_kmedian_lp(metric, k, p, ℓ, L; solve_ip=false, verbose=false, s
     model = Model(solver = GurobiSolver(LogToConsole= verbose ? 1 : 0, Threads=4))
     # Defining the variables
     if solve_ip
-        @defVar(model, x[1:N, 1:N], Bin)
         if soft_capacities
+            @defVar(model, x[1:N, 1:N] >= 0, Int)
             @defVar(model, y[1:N] >= 0, Int)
         else
+            @defVar(model, x[1:N, 1:N], Bin)
             @defVar(model, y[1:N], Bin)
         end
     else
-        @defVar(model, 0 <= x[1:N, 1:N] <= 1) # assignment variables
+
         if soft_capacities
+            @defVar(model, x[1:N, 1:N] >= 0) # assignment variables
             @defVar(model, y[1:N] >= 0)
         else
+            @defVar(model, 0 <= x[1:N, 1:N] <= 1) # assignment variables
             @defVar(model, 0 <= y[1:N] <= 1) # opening variables
         end
     end
