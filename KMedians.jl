@@ -1,6 +1,7 @@
 module KMedians
 
 export SparseLPSolution, exact_kmedian, kmedian_rounded_y, objective_value
+export make_assignment_matrix
 
 using Metrics
 import Base.size
@@ -88,9 +89,34 @@ function SparseLPSolution(x, y)
    return sol
 end
 
-function make_as_cs(sol::SparseLPSolution)
-    n = length(sol.assignments)
+function make_assignment_matrix(s::SparseLPSolution, n, k, p)
+    cs = Array(Int, k)
+    as = Array(Int, p, n)
 
+    cix = 1
+    a_count = ones(Int, n)
+    for (c,w) in s.centers
+        copies = round(Int, w)
+        for m in 1:copies
+            cs[cix + m - 1] = c
+        end
+
+        copy_index = cix
+        for x in s.clusters[c]
+            for m in 1:round(Int, s.assignments[x][c])
+                as[a_count[x], x] = copy_index
+                a_count[x] += 1
+                copy_index += 1
+                if copy_index >= copies + cix
+                    copy_index = cix
+                end
+            end
+        end
+
+        cix += copies
+    end
+
+    return as, cs
 end
 
 function objective_value(m::FiniteMetric, s::SparseLPSolution)
