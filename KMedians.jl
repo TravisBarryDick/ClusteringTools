@@ -12,53 +12,111 @@ import Base.size
 
 using JuMP, Gurobi
 
-function solve_kmedian_lp(metric, k, p, ℓ, L; solve_ip=false, verbose=false, soft_capacities=false)
-    N = size(metric)
-    @assert ℓ*k <= p*N "Lower capacity can't be satisfied."
-    @assert L*k >= p*N "Upper capacity can't be satisfied."
+function solve_kmedian_lp(metric, k, p, ℓ, L;
+                          last_facility = -1, first_location = -1,
+                          solve_ip = false, verbose = false, soft_capacities = false)
 
-    # Use JuMP to build the LP
-    model = Model(solver = GurobiSolver(LogToConsole= verbose ? 1 : 0, Threads=4))
-    # Defining the variables
+    N = size(metric)
+    last_facility = last_facility == -1 ? N : last_facility
+    num_facilities = last_facility
+
+    first_location = first_location == -1 ? 1 : first_location
+    num_locations = N - first_location + 1
+
+    # Conversion from facility indices to metric indices (this is trivial for now)
+    f2m(f) = f
+    m2f(m) = m
+    # Conversion from location indices to metric indices
+    l2m(l) = l + first_location - 1
+    m2l(m) = m - first_location + 1
+
+    model = Model(solver = GurobiSolver(LogToConsole = verbose ? 1 : 0, Threads=4))
     if solve_ip
         if soft_capacities
-            @defVar(model, x[1:N, 1:N] >= 0, Int)
-            @defVar(model, y[1:N] >= 0, Int)
+            @defVar(model, x[1:num_facilities, 1:num_locations] >= 0, Int)
+            @defVar(model, y[1:num_facilities] >= 0, Int)
         else
-            @defVar(model, x[1:N, 1:N], Bin)
-            @defVar(model, y[1:N], Bin)
+            @defVar(model, x[1:num_facilities, 1:num_locations], Bin)
+            @defVar(model, y[1:num_facilities], Bin)
         end
     else
-
         if soft_capacities
-            @defVar(model, x[1:N, 1:N] >= 0) # assignment variables
-            @defVar(model, y[1:N] >= 0)
+            @defVar(model, x[1:num_facilities, 1:num_locations] >= 0)
+            @defVar(model, y[1:num_facilities] >= 0)
         else
-            @defVar(model, 0 <= x[1:N, 1:N] <= 1) # assignment variables
-            @defVar(model, 0 <= y[1:N] <= 1) # opening variables
+            @defVar(model, 0 <= x[1:num_facilities, 1:num_locations] <= 1)
+            @defVar(model, 0 <= y[1:num_facilities] <= 1)
         end
     end
     # Replication constraints
-    for j in 1:N
-        @addConstraint(model, sum{x[i,j], i=1:N} == p)
+    for j in 1:num_locations
+        @addConstraint(model, sum{x[i,j], i=1:num_facilities} == p)
     end
     # Capacity constraints
-    for i in 1:N
-        @addConstraint(model, sum{x[i,j], j=1:N} >= ℓ*y[i])
-        @addConstraint(model, sum{x[i,j], j=1:N} <= L*y[i])
+    for i in 1:last_facility
+        @addConstraint(model, sum{x[i,j], j=1:num_locations} >= ℓ*y[i])
+        @addConstraint(model, sum{x[i,j], j=1:num_locations} <= L*y[i])
     end
     # Number of centers
-    @addConstraint(model, sum{y[i], i=1:N} == k)
+    @addConstraint(model, sum{y[i], i=1:num_facilities} == k)
     # Assignment constraints
-    for i in 1:N, j in 1:N
+    for i in 1:last_facility, j in 1:num_locations
         @addConstraint(model, x[i,j] >= 0)
         @addConstraint(model, x[i,j] <= y[i])
     end
-    @setObjective(model, Min, sum{dist(metric,i,j)*x[i,j], i=1:N, j=1:N})
+    @setObjective(model, Min, sum{dist(metric,f2m(i),l2m(j))*x[i,j], i=1:num_facilities, j=1:num_locations})
     status = solve(model)
     return SparseLPSolution(getValue(x).innerArray,
-                            getValue(y).innerArray)
+                            getValue(y).innerArray,
+                            N, last_facility, first_location)
 end
+#
+# function solve_kmedian_lp(metric, k, p, ℓ, L; solve_ip=false, verbose=false, soft_capacities=false)
+#     N = size(metric)
+#     @assert ℓ*k <= p*N "Lower capacity can't be satisfied."
+#     @assert L*k >= p*N "Upper capacity can't be satisfied."
+#
+#     # Use JuMP to build the LP
+#     model = Model(solver = GurobiSolver(LogToConsole= verbose ? 1 : 0, Threads=4))
+#     # Defining the variables
+#     if solve_ip
+#         if soft_capacities
+#             @defVar(model, x[1:N, 1:N] >= 0, Int)
+#             @defVar(model, y[1:N] >= 0, Int)
+#         else
+#             @defVar(model, x[1:N, 1:N], Bin)
+#             @defVar(model, y[1:N], Bin)
+#         end
+#     else
+#         if soft_capacities
+#             @defVar(model, x[1:N, 1:N] >= 0) # assignment variables
+#             @defVar(model, y[1:N] >= 0)
+#         else
+#             @defVar(model, 0 <= x[1:N, 1:N] <= 1) # assignment variables
+#             @defVar(model, 0 <= y[1:N] <= 1) # opening variables
+#         end
+#     end
+#     # Replication constraints
+#     for j in 1:N
+#         @addConstraint(model, sum{x[i,j], i=1:N} == p)
+#     end
+#     # Capacity constraints
+#     for i in 1:N
+#         @addConstraint(model, sum{x[i,j], j=1:N} >= ℓ*y[i])
+#         @addConstraint(model, sum{x[i,j], j=1:N} <= L*y[i])
+#     end
+#     # Number of centers
+#     @addConstraint(model, sum{y[i], i=1:N} == k)
+#     # Assignment constraints
+#     for i in 1:N, j in 1:N
+#         @addConstraint(model, x[i,j] >= 0)
+#         @addConstraint(model, x[i,j] <= y[i])
+#     end
+#     @setObjective(model, Min, sum{dist(metric,i,j)*x[i,j], i=1:N, j=1:N})
+#     status = solve(model)
+#     return SparseLPSolution(getValue(x).innerArray,
+#                             getValue(y).innerArray)
+# end
 
 ####################
 # Sparse Solutions #
@@ -77,17 +135,20 @@ SparseLPSolution(N) = SparseLPSolution(Dict{Int,Float64}(),
                                        [Set{Int}() for i in 1:N],
                                        Set{Tuple{Int,Int}}(), 1e-20)
 
-function SparseLPSolution(x, y)
-   N = size(x,1)
-   sol = SparseLPSolution(N)
-   for j in 1:N
-       set_opening!(sol, j, y[j])
-       for i in 1:N
-           set_assignment!(sol, i, j, x[j,i])
-       end
-   end
-   return sol
+function SparseLPSolution(x, y, N, last_facility, first_location)
+    f2m(f) = f
+    l2m(l) = l + first_location - 1
+    sol = SparseLPSolution(N)
+    for i in 1:last_facility
+        set_opening!(sol, f2m(i), y[f2m(i)])
+        for j in 1:(N-first_location+1)
+            set_assignment!(sol, l2m(j), f2m(i), x[i,j])
+        end
+    end
+    return sol
 end
+
+SparseLPSolution(x, y, N) = SparseLPSolution(x,y,N,N,1)
 
 function make_assignment_matrix(s::SparseLPSolution, n, k, p)
     cs = Array(Int, k)
@@ -148,7 +209,9 @@ function set_assignment!(s::SparseLPSolution, i, j, w)
         push!(s.clusters[j], i)
     else
         delete!(s.assignments[i], j)
-        push!(s.to_be_deleted, (i,j))
+        if i in s.clusters[j]
+            push!(s.to_be_deleted, (i,j))
+        end
     end
 end
 
