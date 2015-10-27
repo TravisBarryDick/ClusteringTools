@@ -70,53 +70,6 @@ function solve_kmedian_lp(metric, k, p, ℓ, L;
                             getValue(y).innerArray,
                             N, last_facility, first_location)
 end
-#
-# function solve_kmedian_lp(metric, k, p, ℓ, L; solve_ip=false, verbose=false, soft_capacities=false)
-#     N = size(metric)
-#     @assert ℓ*k <= p*N "Lower capacity can't be satisfied."
-#     @assert L*k >= p*N "Upper capacity can't be satisfied."
-#
-#     # Use JuMP to build the LP
-#     model = Model(solver = GurobiSolver(LogToConsole= verbose ? 1 : 0, Threads=4))
-#     # Defining the variables
-#     if solve_ip
-#         if soft_capacities
-#             @defVar(model, x[1:N, 1:N] >= 0, Int)
-#             @defVar(model, y[1:N] >= 0, Int)
-#         else
-#             @defVar(model, x[1:N, 1:N], Bin)
-#             @defVar(model, y[1:N], Bin)
-#         end
-#     else
-#         if soft_capacities
-#             @defVar(model, x[1:N, 1:N] >= 0) # assignment variables
-#             @defVar(model, y[1:N] >= 0)
-#         else
-#             @defVar(model, 0 <= x[1:N, 1:N] <= 1) # assignment variables
-#             @defVar(model, 0 <= y[1:N] <= 1) # opening variables
-#         end
-#     end
-#     # Replication constraints
-#     for j in 1:N
-#         @addConstraint(model, sum{x[i,j], i=1:N} == p)
-#     end
-#     # Capacity constraints
-#     for i in 1:N
-#         @addConstraint(model, sum{x[i,j], j=1:N} >= ℓ*y[i])
-#         @addConstraint(model, sum{x[i,j], j=1:N} <= L*y[i])
-#     end
-#     # Number of centers
-#     @addConstraint(model, sum{y[i], i=1:N} == k)
-#     # Assignment constraints
-#     for i in 1:N, j in 1:N
-#         @addConstraint(model, x[i,j] >= 0)
-#         @addConstraint(model, x[i,j] <= y[i])
-#     end
-#     @setObjective(model, Min, sum{dist(metric,i,j)*x[i,j], i=1:N, j=1:N})
-#     status = solve(model)
-#     return SparseLPSolution(getValue(x).innerArray,
-#                             getValue(y).innerArray)
-# end
 
 ####################
 # Sparse Solutions #
@@ -353,26 +306,26 @@ end
 # Wrapper Functions #
 #####################
 
-function exact_kmedian(data, k, p, ℓ, L; verbose=false, soft_capacities = false)
+function exact_kmedian(data, k, p, ℓ, L; kwargs...)
     metric = precompute_metric(data)
-    return exact_kmedian(metric, k, p, ℓ, L; verbose=verbose, soft_capacities=soft_capacities)
+    return exact_kmedian(metric, k, p, ℓ, L; kwargs...)
 end
 
-function exact_kmedian(data, k; verbose=false, soft_capacities = false)
-    exact_kmedian(data, k, 1, 0, size(data,2); verbose=false, soft_capacities=soft_capacities)
+function exact_kmedian(data, k; kwargs...)
+    exact_kmedian(data, k, 1, 0, size(data,2); kwargs...)
 end
 
-function exact_kmedian(metric::FiniteMetric, k, p, ℓ, L; verbose=false, soft_capacities=false)
-    solve_kmedian_lp(metric, k, p, ℓ, L, solve_ip=true, verbose=verbose, soft_capacities=soft_capacities)
+function exact_kmedian(metric::FiniteMetric, k, p, ℓ, L; kwargs...)
+    solve_kmedian_lp(metric, k, p, ℓ, L, solve_ip=true; kwargs...)
 end
 
-function exact_kmedian(metric::FiniteMetric, k; verbose=false, soft_capacities=false)
-    exact_kmedian(metric, k, 1, 0, size(metric); verbose=verbose, soft_capacities=soft_capacities)
+function exact_kmedian(metric::FiniteMetric, k; kwargs...)
+    exact_kmedian(metric, k, 1, 0, size(metric); kwargs...)
 end
 
-function kmedian_rounded_y(metric::FiniteMetric, k, p, ℓ, L; verbose = false)
+function kmedian_rounded_y(metric::FiniteMetric, k, p, ℓ, L; kwargs...)
     @assert p ≥ 2
-    sol = solve_kmedian_lp(metric, k, p, ℓ, L, verbose=verbose)
+    sol = solve_kmedian_lp(metric, k, p, ℓ, L; kwargs...)
     monarchs, empires = monarch_procedure(metric, sol)
     round_ys!(metric, sol, monarchs, empires)
     return sol
