@@ -66,8 +66,8 @@ function solve_kmedian_lp(metric, k, p, ℓ, L;
     end
     @setObjective(model, Min, sum{dist(metric,f2m(i),l2m(j))*x[i,j], i=1:num_facilities, j=1:num_locations})
     status = solve(model)
-    return SparseLPSolution(getValue(x).innerArray,
-                            getValue(y).innerArray,
+    return SparseLPSolution(getValue(x),
+                            getValue(y),
                             N, last_facility, first_location)
 end
 
