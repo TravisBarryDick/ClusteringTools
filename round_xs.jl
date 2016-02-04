@@ -10,7 +10,7 @@ function round_xs(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
         model = Model(solver = GurobiSolver(LogToConsole = verbose ? 1 : 0, Threads=4))
 
         # Define Variables
-		@defVar(model, x[1:k,  1:N], Bin)
+	@defVar(model, x[1:k,  1:N], Bin)
         #@defVar(model, 0 <= x[1:k,  1:N] <= 1)
         # Replication constraints
         for j in 1:N 
@@ -32,7 +32,7 @@ function round_xs(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
 		end
 		for i in 1:k, j in 1:N
 			if (x[i, j] >= 1 - new_sol.eps)
-					set_assignment!(new_sol, centers[i], j, x[i, j])
+				set_assignment!(new_sol, centers[i], j, x[i, j])
 			end
 		end
 		return new_sol
