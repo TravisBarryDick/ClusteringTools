@@ -24,19 +24,17 @@ function round_xs(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
         @setObjective(model, :Min, sum{dist(metric,centers[i],j)*x[i,j], i=1:k, j=1:N})
         status = solve(model)
         xs = getValue(x)
-        # TO-DO
-        ###########################
-		new_sol = SparseLPSolution(N)
-		for c in centers
-			set_opening!(new_sol, c, 1.0)
+        # output
+	new_sol = SparseLPSolution(N)
+	for c in centers
+		set_opening!(new_sol, c, 1.0)
+	end
+	for i in 1:k, j in 1:N
+		if (x[i, j] >= 1 - new_sol.eps)
+			set_assignment!(new_sol, centers[i], j, x[i, j])
 		end
-		for i in 1:k, j in 1:N
-			if (x[i, j] >= 1 - new_sol.eps)
-				set_assignment!(new_sol, centers[i], j, x[i, j])
-			end
-		end
-		return new_sol
-
+	end
+	return new_sol
 end
 
 function kmedian_round(metric::FiniteMetric, k, p, ℓ, L; kwargs...)
