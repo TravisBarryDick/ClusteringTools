@@ -336,4 +336,7 @@ function kmedian_rounded_y(data, k, p, ℓ, L; verbose = false)
     kmedian_rounded_y(metric, k, p, ℓ, L; verbose = verbose)
 end
 
+
+include("round_xs.jl")
+
 end
