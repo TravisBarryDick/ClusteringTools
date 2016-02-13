@@ -34,7 +34,7 @@ function round_xs(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
 	for i in 1:k, j in 1:N
 		if (xs[i, j] >= 1 - new_sol.eps)
 			set_assignment!(new_sol, j, centers[i], xs[i, j])
-			println("Assign center $(centers[i]) to point $(j)")
+			#println("Assign center $(centers[i]) to point $(j)")
 		end
 	end
 	return new_sol
