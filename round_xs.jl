@@ -8,7 +8,7 @@ function round_xs(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
 
     N = size(metric)
     k = length(centers)
-    new_L = ceil(1.0 * L * (p+2) / p)
+    new_L = ceil(Int, 1.0 * L * (p+2) / p)
 
     model = Model(solver = GurobiSolver(LogToConsole = verbose ? 1 : 0, Threads=4))
 
@@ -45,31 +45,31 @@ function output_dimacs(filename, metric::FiniteMetric, sol::SparseLPSolution, p,
     centers = collect(keys(sol.centers))
     N = size(metric)
     k = length(centers)
-    new_L = ceil(1.0 * L * (p+2) / p)
+    new_L = ceil(Int, 1.0 * L * (p+2) / p)
     outfile = open(filename, "w")
-    println("c DIMACS format of graph for min cost flow")
+    println(outfile, "c DIMACS format of graph for min cost flow")
     #problem description
-    println("p min $(N+k+1) $(k*(N+1))")
+    println(outfile, "p min $(N+k+1) $(k*(N+1))")
     
     #node descriptions: points, centers and sink
     for i in 1:N
-        println("n $(i) $(p)")
+        println(outfile, "n $(i) $(p)")
     end
     for j in 1:k
-        println("n $(j+N) $(-ℓ)")
+        println(outfile, "n $(j+N) $(-ℓ)")
     end
-    println("n $(N+k+1) $(-N*p + k*ℓ)")
+    println(outfile, "n $(N+k+1) $(-N*p + k*ℓ)")
 
     #edge descriptions: points-to-centers and centers-to-sink
     for i in 1:N
         for j in 1:k
-            println("arc $(i) $(j+N) 0 2 $(dist(metric,centers[j],i))")
+            println(outfile, "a $(i) $(j+N) 0 2 $(dist(metric,centers[j],i))")
         end
     end
     for j in 1:k
-        println("arc $(j+N) $(N+k+1) 0 $(new_L - ℓ) 0")
+        println(outfile, "a $(j+N) $(N+k+1) 0 $(new_L - ℓ) 0.0")
     end
-    close(f)
+    close(outfile)
 end
 
 function kmedian_round(metric::FiniteMetric, k, p, ℓ, L; kwargs...)
