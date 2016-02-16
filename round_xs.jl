@@ -1,8 +1,8 @@
 export kmedian_round
 
-function round_xs(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
+function round_xs_ip(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
     verbose = false)
-    output_dimacs("./temp_out", metric, sol, p, ℓ, L)
+    #output_dimacs("./temp_out", metric, sol, p, ℓ, L)
     #centers is an array with the indices of centers
     centers = collect(keys(sol.centers))
 
@@ -72,12 +72,44 @@ function output_dimacs(filename, metric::FiniteMetric, sol::SparseLPSolution, p,
     close(outfile)
 end
 
+function parse_mcf_output(filename, sol::SparseLPSolution, N)
+    #each line of output is "from to flow"
+    centers = collect(keys(sol.centers))
+    k = length(centers)
+    new_sol = SparseLPSolution(N)
+    for c in centers
+        set_opening!(new_sol, c, 1.0)
+    end
+    f = open(filename)
+    for line in eachline(f)
+        flow = map( x -> parse(Int, strip(x)), split(line))
+        if (length(flow) != 3) ; continue; end
+        if (flow[1] > N) ; continue ; end #ignore edges to sink
+        @assert ( flow[2] > N && flow[2] <= N+k )
+        set_assignment!(new_sol, flow[1], centers[flow[2] - N], flow[3])
+    end
+    return new_sol
+end
+
+
+function round_xs_lemon(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
+    verbose = false)
+    infile = "./temp1"
+    outfile = "./temp2"
+    output_dimacs(infile, metric, sol, p, ℓ, L)
+    run(`./mcf $infile $outfile`)
+    N = size(metric)
+    new_sol = parse_mcf_output(outfile, sol,  N)
+    run(`rm $infile $outfile`)
+    return new_sol
+end
+
 function kmedian_round(metric::FiniteMetric, k, p, ℓ, L; kwargs...)
     @assert p ≥ 2 
     sol = solve_kmedian_lp(metric, k, p, ℓ, L; kwargs...)
     monarchs, empires = monarch_procedure(metric, sol)
     round_ys!(metric, sol, monarchs, empires)
-    new_sol = round_xs(metric, sol, p, ℓ, L, verbose = true)
+    new_sol = round_xs_lemon(metric, sol, p, ℓ, L, verbose = true)
     return new_sol
 end
 

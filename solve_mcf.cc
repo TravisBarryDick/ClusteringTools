@@ -31,9 +31,10 @@ int main(int argc, char *argv[]){
     std::ofstream fout(argv[2]);
 
     //generate output
+    //FORMAT: source target flow
     for (SmartDigraph::ArcIt e(g) ; e != INVALID ; ++e) {
         if (algo.flow(e) != 0) {
-            fout <<  g.id(g.source(e)) << " " << g.id(g.target(e)) << " " << algo.flow(e) << std::endl;
+            fout <<  1+g.id(g.source(e)) << " " << 1+g.id(g.target(e)) << " " << algo.flow(e) << std::endl;
         }
     }
 }
