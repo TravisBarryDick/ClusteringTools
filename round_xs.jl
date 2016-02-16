@@ -97,6 +97,7 @@ function round_xs_lemon(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
     infile = "./temp1"
     outfile = "./temp2"
     output_dimacs(infile, metric, sol, p, ℓ, L)
+    # to compile: g++ solve_mcf.cc -I ../lemon/include/ -L ../lemon/lib/ -lemon -o mcf
     run(`./mcf $infile $outfile`)
     N = size(metric)
     new_sol = parse_mcf_output(outfile, sol,  N)
