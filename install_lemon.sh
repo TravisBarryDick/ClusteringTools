@@ -9,8 +9,7 @@ tar -zvxf ${LEMON_SRC}.tar.gz
 cd ${LEMON_SRC}
 cmake . -DCMAKE_INSTALL_PREFIX="../${LEMON_DIR}"
 make 
-echo "Password requied to install."
-sudo make install
+make install
 cd ${WORK_DIR}
 
 echo "Compiling now"

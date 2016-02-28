@@ -16,14 +16,14 @@ function round_xs_ip(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
     @defVar(model, x[1:k,  1:N], Bin)
     #@defVar(model, 0 <= x[1:k,  1:N] <= 1)
     # Replication constraints
-    for j in 1:N 
+    for j in 1:N
         @addConstraint(model, p/2 <= sum{x[i,j], i=1:k} <= p)
-    end 
+    end
     # Capacity constraints
-    for i in 1:k 
+    for i in 1:k
         @addConstraint(model, sum{x[i,j], j=1:N} >= ℓ)
         @addConstraint(model, sum{x[i,j], j=1:N} <= new_L)
-    end 
+    end
     @setObjective(model, :Min, sum{dist(metric,centers[i],j)*x[i,j], i=1:k, j=1:N})
     status = solve(model)
     xs = getValue(x)
@@ -50,7 +50,7 @@ function output_dimacs(filename, metric::FiniteMetric, sol::SparseLPSolution, p,
     println(outfile, "c DIMACS format of graph for min cost flow")
     #problem description
     println(outfile, "p min $(N+k+1) $(k*(N+1))")
-    
+
     #node descriptions: points, centers and sink
     for i in 1:N
         println(outfile, "n $(i) $(p)")
@@ -91,14 +91,14 @@ function parse_mcf_output(filename, sol::SparseLPSolution, N)
     return new_sol
 end
 
-
 function round_xs_lemon(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
     verbose = false)
     infile = "./temp1"
     outfile = "./temp2"
     output_dimacs(infile, metric, sol, p, ℓ, L)
     # to compile: g++ solve_mcf.cc -I ../lemon/include/ -L ../lemon/lib/ -lemon -o mcf
-    run(`./mcf $infile $outfile`)
+    mcf_path = joinpath(dirname(@__FILE__()), "mcf")
+    run(`$mcf_path $infile $outfile`)
     N = size(metric)
     new_sol = parse_mcf_output(outfile, sol,  N)
     run(`rm $infile $outfile`)
@@ -106,7 +106,7 @@ function round_xs_lemon(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
 end
 
 function kmedian_round(metric::FiniteMetric, k, p, ℓ, L; kwargs...)
-    @assert p ≥ 2 
+    @assert p ≥ 2
     sol = solve_kmedian_lp(metric, k, p, ℓ, L; kwargs...)
     monarchs, empires = monarch_procedure(metric, sol)
     round_ys!(metric, sol, monarchs, empires)
