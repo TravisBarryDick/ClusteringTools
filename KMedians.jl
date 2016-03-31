@@ -291,7 +291,7 @@ function round_ys!(m::FiniteMetric, s::SparseLPSolution, monarchs, empires)
         inner_ix = 1
         for p in length(empire):-1:(floor(Int, Y)+1)
             source = empire[p]
-            while get(s.centers, source, 0.0) > 0.0
+            while get(s.centers, source, 0.0) > 1e-8
                 dest = empire[inner_ix]
                 to_move = get(s.centers, source, 0.0)
                 space = z - get(s.centers, dest, 0.0)
@@ -301,6 +301,7 @@ function round_ys!(m::FiniteMetric, s::SparseLPSolution, monarchs, empires)
                     inner_ix += 1
                 end
             end
+            set_opening!(s, source, 0.0)
         end
     end
     for (c, w) in s.centers
