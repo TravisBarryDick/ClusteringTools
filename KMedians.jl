@@ -10,7 +10,7 @@ import Base.size
 # Code for solving the k-medians linear program #
 #################################################
 
-using JuMP, Clp, Cbc
+using JuMP, Gurobi
 
 function solve_kmedian_lp(metric, k, p, ℓ, L;
                           last_facility = -1, first_location = -1,
@@ -30,12 +30,12 @@ function solve_kmedian_lp(metric, k, p, ℓ, L;
     l2m(l) = l + first_location - 1
     m2l(m) = m - first_location + 1
 
-    #model = Model(solver = GurobiSolver(LogToConsole = verbose ? 1 : 0, Threads=4))
-    if solve_ip
-        model = Model(solver = CbcSolver(LogLevel = verbose ? 4 : 0))
-    else
-        model = Model(solver = ClpSolver(LogLevel = verbose ? 4 : 0))
-    end
+    model = Model(solver = GurobiSolver(LogToConsole = verbose ? 1 : 0, Threads=4))
+    # if solve_ip
+    #     model = Model(solver = CbcSolver(LogLevel = verbose ? 4 : 0))
+    # else
+    #     model = Model(solver = ClpSolver(LogLevel = verbose ? 4 : 0))
+    # end
 
     if solve_ip
         if soft_capacities
