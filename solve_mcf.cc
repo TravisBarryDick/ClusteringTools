@@ -5,8 +5,6 @@
 #include <lemon/capacity_scaling.h>
 using namespace lemon;
 
-
-
 int main(int argc, char *argv[]){
     //assert command line args
     if (argc < 3) {
@@ -20,14 +18,14 @@ int main(int argc, char *argv[]){
     SmartDigraph::NodeMap<int> supply(g);
     readDimacsMin(f, g, lower, capacity, cost, supply);
 
-    std::cerr << "Nodes: " << countNodes(g) << "\t Edges: " << countArcs(g) << std::endl;
+    //std::cerr << "Nodes: " << countNodes(g) << "\t Edges: " << countArcs(g) << std::endl;
 
     CapacityScaling<SmartDigraph> algo(g);
     algo.upperMap(capacity).costMap(cost).supplyMap(supply);
-    
-    //run teh algo
+
+    //run the algo
     algo.run();
-    std::cerr << "Total cost: " << algo.totalCost() << std::endl;
+    //std::cerr << "Total cost: " << algo.totalCost() << std::endl;
     std::ofstream fout(argv[2]);
 
     //generate output

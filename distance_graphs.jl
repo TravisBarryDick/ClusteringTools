@@ -1,9 +1,3 @@
-module DistanceGraphs
-
-export DistanceGraph, add_edge!, node_group, total_size, make_metric
-
-using KMedians, Metrics
-
 type DistanceGraph
     num_nodes::Int
     neighbors::Vector{Set{Int}}
@@ -49,6 +43,4 @@ function node_assignment(sg::DistanceGraph, sol::SparseLPSolution, a)
         end
     end
     return counts
-end
-
 end
