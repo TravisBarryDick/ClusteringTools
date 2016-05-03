@@ -1,6 +1,7 @@
 function exact_clustering(data::Array{Float64,2}, k, p, ℓ, L, obj; kwargs...)
     metric = DataMetric(data)
-    return exact_clustering(metric, k, p, ℓ, L, obj; kwargs...)
+    s = exact_clustering(metric, k, p, ℓ, L, obj; kwargs...)
+    return ClusterSol(s, data)
 end
 
 function exact_clustering(metric::FiniteMetric, k, p, ℓ, L, obj; kwargs...)
@@ -12,7 +13,8 @@ end
 
 function rounded_clustering(data::Array{Float64,2}, k, p, ℓ, L, obj; kwargs...)
     metric = DataMetric(data)
-    return rounded_clustering(metric, k, p, ℓ, L, obj; kwargs...)
+    s = rounded_clustering(metric, k, p, ℓ, L, obj; kwargs...)
+    return ClusterSol(s, data)
 end
 
 function rounded_clustering(metric::FiniteMetric, k, p, ℓ, L, obj; kwargs...)

@@ -1,12 +1,21 @@
 module ClusteringTools
 
+include("utils.jl")
+
 include("metrics.jl")
 export FiniteMetric, PrecomputedMetric, DataMetric, precompute_metric, dist
 
+include("cluster_sol.jl")
+export ClusterSol, cluster_keys, num_clusters, num_points
+export get_cluster, get_centers, objective_value
+
+include("kp_means.jl")
+export kpmeans
+
 include("clustering_optim.jl")
 include("sparse_lp_solution.jl")
-export SparseLPSolution, set_x!, get_x, set_y!, get_y, get_centers, get_cluster
-export objective_value
+export SparseLPSolution, set_x!, get_x, set_y!, get_y
+
 
 include("round_ys.jl")
 include("round_xs.jl")
