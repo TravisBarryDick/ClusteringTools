@@ -7,7 +7,7 @@ export FiniteMetric, PrecomputedMetric, DataMetric, precompute_metric, dist
 
 include("cluster_sol.jl")
 export ClusterSol, cluster_keys, num_clusters, num_points
-export get_cluster, get_centers, objective_value
+export get_cluster, get_assignments, get_center, get_point, objective_value
 
 include("kp_means.jl")
 export kpmeans

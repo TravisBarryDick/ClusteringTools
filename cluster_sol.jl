@@ -32,7 +32,7 @@ _dist(x,y) = sqrt(_sqdist(x,y))
 function objective_value(c::ClusterSol, obj)
     total = 0.0
     for i in 1:num_points(c)
-        for key in get_assignment(c, i)
+        for key in get_assignments(c, i)
             if obj == :KMedian
                 total += _dist(get_center(c, key), get_point(c, i))
             elseif obj == :KMeans
