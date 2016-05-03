@@ -3,9 +3,9 @@ Moves δ opening from center `i` to center `j` (and proportionally moves
 assignments).
 """
 function move_y!(s::SparseLPSolution, i, j, δ)
+    γ = δ / get_y(s, i)
     set_y!(s, i, get_y(s, i) - δ)
     set_y!(s, j, get_y(s, j) + δ)
-    γ = δ / get_y(s, i)
     for p in get_cluster(s, i)
         Δx = get_x(s, i, p) * γ
         set_x!(s, i, p, get_x(s, i, p) - Δx)
@@ -98,10 +98,9 @@ function round_ys!(m::FiniteMetric, s::SparseLPSolution, obj)
             sparsify!(s)
         end
     end
-
     for c in keys(s.y)
         set_y!(s, c, 1.0)
-        sparsify!(s)
     end
+    sparsify!(s)
     nothing
 end

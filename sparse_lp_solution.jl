@@ -111,8 +111,8 @@ end
 
 function ClusterSol(s::SparseLPSolution, X::Array{Float64, 2})
     n = size(X,2)
-    centers = [k => X[:,k] for k in keys(s.centers)]
-    p2cs = [Set(collect(keys(as))) for as in s.assignments]
-    c2ps = [k => s.clusters[k] for k in keys(s.centers)]
-    return ClusterSolution(X, centers, p2cs, c2ps)
+    centers = [k => X[:,k] for k in keys(s.y)]
+    p2cs = [Set(collect(keys(s.x[j]))) for j in 1:n]
+    c2ps = [i => Set(collect(keys(s.c[i]))) for i in keys(s.y)]
+    return ClusterSol(X, centers, p2cs, c2ps)
 end

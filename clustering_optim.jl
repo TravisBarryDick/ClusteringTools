@@ -32,11 +32,16 @@ function solve_clustering_optimization(metric, k, p, ℓ, L;
         @addConstraint(model, x[i,j] <= y[i])
     end
     # Set the objective
-    if obj == :KMedian
-        @setObjective(model, Min, sum{dist(metric,i,j)*x[i,j], i=1:N, j=1:N})
-    elseif obj == :KMeans
-        @setObjective(model, Min, sum{dist(metric,i,j)^2*x[i,j], i=1:N, j=1:N})
+    obj_expr = zero(AffExpr)
+    for i in 1:N, j in 1:N
+        if obj == :KMedian
+            c = dist(metric, i, j)
+        elseif obj == :KMeans
+            c = dist(metric, i, j)^2
+        end
+        append!(obj_expr, c*x[i,j])
     end
+    @setObjective(model, Min, obj_expr)
     # Sovle the model
     status = solve(model)
 

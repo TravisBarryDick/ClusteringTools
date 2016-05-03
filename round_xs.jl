@@ -1,7 +1,7 @@
 export kmedian_round
 
 function output_dimacs(filename, metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L)
-    centers = collect(get_centers(sol))
+    centers = collect(keys(sol.y))
     N = size(metric)
     k = length(centers)
     new_L = ceil(Int, 1.0 * L * (p+2) / p)
@@ -33,7 +33,7 @@ end
 
 function parse_mcf_output(filename, sol::SparseLPSolution, N)
     #each line of output is "from to flow"
-    centers = collect(get_centers(sol))
+    centers = collect(keys(sol.y))
     k = length(centers)
     new_sol = SparseLPSolution(N)
     for c in centers
@@ -45,12 +45,12 @@ function parse_mcf_output(filename, sol::SparseLPSolution, N)
         if (length(flow) != 3) ; continue; end
         if (flow[1] > N) ; continue ; end #ignore edges to sink
         @assert ( flow[2] > N && flow[2] <= N+k )
-        set_x!(new_sol, flow[1], centers[flow[2] - N], flow[3])
+        set_x!(new_sol, centers[flow[2] - N], flow[1], flow[3])
     end
     return new_sol
 end
 
-function round_xs!(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
+function round_xs(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
     verbose = false)
     infile = "./temp1"
     outfile = "./temp2"
@@ -62,5 +62,6 @@ function round_xs!(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
     new_sol = parse_mcf_output(outfile, sol,  N)
     rm(infile)
     rm(outfile)
+    sparsify!(new_sol)
     return new_sol
 end

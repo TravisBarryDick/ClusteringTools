@@ -1,5 +1,5 @@
 function exact_clustering(data::Array{Float64,2}, k, p, ℓ, L, obj; kwargs...)
-    metric = DataMetric(data)
+    metric = precompute_metric(data)
     s = exact_clustering(metric, k, p, ℓ, L, obj; kwargs...)
     return ClusterSol(s, data)
 end
@@ -12,7 +12,7 @@ function exact_clustering(metric::FiniteMetric, k, p, ℓ, L, obj; kwargs...)
 end
 
 function rounded_clustering(data::Array{Float64,2}, k, p, ℓ, L, obj; kwargs...)
-    metric = DataMetric(data)
+    metric = precompute_metric(data)
     s = rounded_clustering(metric, k, p, ℓ, L, obj; kwargs...)
     return ClusterSol(s, data)
 end
@@ -23,6 +23,6 @@ function rounded_clustering(metric::FiniteMetric, k, p, ℓ, L, obj; kwargs...)
                                          kwargs...)
     s = SparseLPSolution(x, y)
     round_ys!(metric, s, obj)
-    round_xs!(metric, s, p, ℓ, L)
+    s = round_xs(metric, s, p, ℓ, L)
     return s
 end

@@ -8,7 +8,7 @@ type DataMetric <: FiniteMetric
     X::Array{Float64, 2}
 end
 
-size(m::DataMetric) = size(X, 2)
+size(m::DataMetric) = size(m.X, 2)
 
 function dist(m::DataMetric, i, j)
     d = 0.0
