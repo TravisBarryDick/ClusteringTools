@@ -52,8 +52,8 @@ end
 
 function round_xs(metric::FiniteMetric, sol::SparseLPSolution, p, ℓ, L;
     verbose = false)
-    infile = "./temp1"
-    outfile = "./temp2"
+    infile = "./$(hash(rand()))"
+    outfile = "./$(hash(rand()))"
     output_dimacs(infile, metric, sol, p, ℓ, L)
     # to compile: g++ solve_mcf.cc -I ../lemon/include/ -L ../lemon/lib/ -lemon -o mcf
     mcf_path = joinpath(dirname(@__FILE__()), "mcf")
