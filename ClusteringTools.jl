@@ -12,6 +12,9 @@ export get_cluster, get_assignments, get_center, get_point, objective_value
 include("kp_means.jl")
 export kpmeans
 
+include("random_centers.jl")
+export random_centers
+
 include("clustering_optim.jl")
 include("sparse_lp_solution.jl")
 export SparseLPSolution, set_x!, get_x, set_y!, get_y
